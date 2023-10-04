@@ -43,7 +43,7 @@
                     default = craneLib.buildTrunkPackage {
                         inherit CARGO_BUILD_TARGET;
                         src=./.;
-                        pname = "leptos-by-example";
+                        pname = "leptos-cv-editor";
                         trunkIndexPath = "./index.html";
                         # trunkExtraBuildArgs = "--public-url=...";
                         nativeBuildInputs = [

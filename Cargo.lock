@@ -884,6 +884,7 @@ dependencies = [
 [[package]]
 name = "leptos-markdown"
 version = "0.5.1"
+source = "git+https://github.com/rambip/leptos-markdown#d82f923084b2e06b3aac4d5f1d81cd5031a0e8ef"
 dependencies = [
  "katex",
  "leptos",
