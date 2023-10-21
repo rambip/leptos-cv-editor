@@ -1,5 +1,0 @@
-[check]
-target = "wasm32-unknown-unknown"
-
-[build]
-target = "wasm32-unknown-unknown"
