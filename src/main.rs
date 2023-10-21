@@ -2,40 +2,18 @@ use leptos::*;
 use leptos::html::Select;
 use leptos_markdown::*;
 
+use std::collections::HashMap;
 
-fn experience(props: MdComponentProps) -> impl IntoView {
-    let date = props.attributes
-        .into_iter()
-        .find(|x| x.0=="date")
-        .map(|x| x.1);
+use serde::Deserialize;
 
-    let style_experience = r#"
-    position: relative;
-    left: -8em;
-    display: flex;
-    margin: 5px;
-    "#;
-
-    let style_date = r#"
-    width: 7em;
-    border-right: 2px solid black;
-    display: flex;
-    justify-content: right;
-    align-items: center;
-    padding: 5px;
-    font-family: times
-    "#;
-    view!{
-        <div style=style_experience>
-            <div style=style_date>
-                <div>{date}</div>
-            </div>
-            <div style="padding: 10px">{props.children}</div>
-        </div>
-    }
-}
 
 static INITIAL_CV: &'static str = r#"
+---
+contact:
+  email: "antonin.peronnet@foobar.tech"
+  linkedin: "todo"
+---
+
 # Antonin Peronnet
 
 ## Projects
@@ -58,7 +36,9 @@ ARTEFACT project, Telecom Paris
 
 <Experience date="2021">
 
-design and prototyping of a fully functioning ergonomic keyboard with a classmate
+Design and prototyping of an ergonomic keyboard 
+- with a classmate, from scratch
+- fully usable
 
 </Experience>
 
@@ -115,14 +95,10 @@ Languages
 - German: limited knowledge
 "#;
 
-static FONTS: [&str; 11] = [
+static FONTS: [&str; 7] = [
     "verdana",
     "times",
     "sans-serif",
-    "candara",
-    "geneva",
-    "optima",
-    "perpetua",
     "monaco",
     "serif",
     "monospace",
@@ -130,18 +106,57 @@ static FONTS: [&str; 11] = [
 ];
 
 
+#[derive(Deserialize)]
+struct MetaData {
+    contact: HashMap<String, String>
+}
+
+
+fn experience(props: MdComponentProps) -> impl IntoView {
+    let date = props.attributes
+        .into_iter()
+        .find(|x| x.0=="date")
+        .map(|x| x.1);
+
+    view!{
+    <div class="date-container">
+        <span class="date">{date}</span>
+    </div>
+    <div style="padding-left: 10px">{props.children}</div>
+    }
+}
+
+
+fn contact(m: Result<MetaData, serde_yaml::Error>) -> impl IntoView {
+    let m = m.unwrap();
+    view!{
+        <h3>Contact me</h3>
+        {m.contact["email"].clone()}
+    }
+}
+
+#[component]
+fn Cv(content: ReadSignal<String>, font_index: ReadSignal<usize>) -> impl IntoView {
+    let (frontmatter, set_frontmatter) = create_signal(String::new());
+
+    let custom_components = ComponentMap::new()
+        .add("Experience", experience);
+
+    view!{
+        <div class="grid" style:font-family=move || FONTS[font_index()]>
+            <Markdown src=content components=custom_components frontmatter=set_frontmatter/>
+            <div class="contact">
+            {move || contact(serde_yaml::from_str(&frontmatter()))}
+            </div>
+        </div>
+    }
+}
+
 #[component]
 fn App() -> impl IntoView {
     let (content, set_content) = create_signal(INITIAL_CV.to_string());
     let (font_index, set_font_index) = create_signal(0usize);
 
-
-    create_effect(move |_| {
-        logging::log!("font index is {}", font_index())
-    });
-
-    let custom_components = ComponentMap::new()
-        .add("Experience", experience);
 
     let font_options = FONTS
         .into_iter()
@@ -152,7 +167,7 @@ fn App() -> impl IntoView {
 
     view!{
         <div style={"display: flex; align-items: top;"}>
-            <div style="width:40%">
+            <div style="width: 30%">
                 <label for="cars">Choose a font:</label>
                 <select name="cars" id="cars"
                     ref=select_ref
@@ -170,11 +185,7 @@ fn App() -> impl IntoView {
                     style="margin: 10px; width: 80%"
                 />
             </div>
-            <div style="width:50%"
-                 style:font-family=move || FONTS[font_index()]
-                 >
-                <Markdown src=content components=custom_components/>
-            </div>
+            <Cv content=content font_index=font_index/>
         </div>
     }
 }
